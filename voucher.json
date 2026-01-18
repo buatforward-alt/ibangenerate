@@ -1,0 +1,23 @@
+{
+  "GENPAC-OQR2AL": {
+    "days": 2000,
+    "status": "available"
+  },
+  "GENPAC-J05AKP": {
+    "days": 2000,
+    "status": "available"
+  },
+  "GENPAC-I0IFVP": {
+    "days": 2000,
+    "status": "available"
+  },
+  "GENPAC-D28D0U": {
+    "days": 2000,
+    "status": "available"
+  },
+  "GENPAC-WW23TA": {
+    "days": 2000,
+    "status": "used",
+    "usedBy": "6180758768"
+  }
+}
