@@ -1,185 +1,279 @@
 require('dotenv').config();
 const express = require('express');
-const path = require('path');
+const TelegramBot = require('node-telegram-bot-api');
+const axios = require('axios');
 const fs = require('fs');
-const axios = require('axios'); // WAJIB: npm install axios
+const path = require('path');
+
 const app = express();
 
+// --- KONFIGURASI ---
 const PORT = process.env.PORT || 3000;
-const ADMIN_ID = process.env.ADMIN_ID; 
-const ADMIN_PASS = process.env.ADMIN_PASS;
 const BOT_TOKEN = process.env.BOT_TOKEN;
+const ADMIN_ID = 7815361814; // ID Admin Kamu
+const ADMIN_PASS = process.env.ADMIN_PASS || "admin123";
 
-// URL Telegram API
-const TG_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
-
+// Inisialisasi Bot & Server
+const bot = new TelegramBot(BOT_TOKEN, { polling: true });
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Database
-const FILE_USER = path.join(__dirname, 'user.json');
-const FILE_VOUCHER = path.join(__dirname, 'voucher.json');
-const OTP_CACHE = {}; 
+// Database Paths
+const USER_DB = 'users.json';
+const VOUCHER_DB = 'vouchers.json';
 
-// --- HELPER FUNCTIONS ---
-function readJSON(file) {
-    try {
-        if (!fs.existsSync(file)) { fs.writeFileSync(file, '{}'); return {}; }
-        return JSON.parse(fs.readFileSync(file, 'utf8'));
-    } catch { return {}; }
-}
-function writeJSON(file, data) {
-    try { fs.writeFileSync(file, JSON.stringify(data, null, 2)); return true; } 
-    catch { return false; }
-}
-async function sendTele(chatId, text) {
-    try { await axios.post(`${TG_API}/sendMessage`, { chat_id: chatId, text, parse_mode: 'Markdown' }); } 
-    catch (e) { console.error("Telegram Error:", e.message); }
-}
+// Init Database
+if (!fs.existsSync(USER_DB)) fs.writeFileSync(USER_DB, '{}');
+if (!fs.existsSync(VOUCHER_DB)) fs.writeFileSync(VOUCHER_DB, '{}');
 
-// --- NEW FEATURE: IDENTITY SCRAPER ---
+const loadData = (file) => { try { return JSON.parse(fs.readFileSync(file, 'utf8')); } catch { return {}; } };
+const saveData = (file, data) => fs.writeFileSync(file, JSON.stringify(data, null, 2));
+
+// Config Negara
+const COUNTRY_CONFIG = {
+    'GB': { name: 'United Kingdom', nat: 'gb', flag: '🇬🇧', bank: 'MIDL', code: '1611', len: 8 },
+    'FR': { name: 'Perancis', nat: 'fr', flag: '🇫🇷', bank: '20041', code: '1527', len: 11 },
+    'DE': { name: 'Germany', nat: 'de', flag: '🇩🇪', bank: '70051540', code: '1314', len: 10 },
+    'NL': { name: 'Belanda', nat: 'nl', flag: '🇳🇱', bank: 'ABNA', code: '2321', len: 10 }
+};
+
+// ==========================================
+// 1. BAGIAN WEBSITE API (SCRAPER & AUTH)
+// ==========================================
+
+// Scraper Real Identity (FakeIT)
 async function scrapeFakeIT(countryCode) {
     try {
-        // Mapping kode negara ke URL target
-        // DE -> /c/de/, FR -> /c/fr/, dll
         const url = `https://fakeit.receivefreesms.co.uk/c/${countryCode.toLowerCase()}/`;
+        const { data } = await axios.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
         
-        const { data } = await axios.get(url, {
-            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' }
-        });
-
-        // Helper regex untuk ambil value dari tabel HTML
         const getVal = (label) => {
-            // Pola: <td>Label</td> <td>Value</td>
             const regex = new RegExp(`>\\s*${label}\\s*<\\/td>\\s*<td[^>]*>(.*?)<\\/td>`, 'i');
             const match = data.match(regex);
-            if (!match) return null;
-            // Bersihkan tag HTML dan text 'Loading...'
-            return match[1].replace(/<[^>]*>/g, '').replace(/Loading\.\.\./gi, '').trim();
+            return match ? match[1].replace(/<[^>]*>/g, '').replace(/Loading\.\.\./gi, '').trim() : null;
         };
 
-        const result = {
-            name: getVal('Name'),
-            address: getVal('Address'),
-            city: getVal('City'),
-            zip: getVal('Postcode'),
-            phone: getVal('Phone'),
-            iban: getVal('IBAN')
-        };
-
-        // Validasi: Jika gagal scrape, return null
-        if (!result.name) return null;
-        return result;
-
-    } catch (e) {
-        console.error("Scrape Error:", e.message);
-        return null;
-    }
+        const res = { name: getVal('Name'), address: getVal('Address'), city: getVal('City'), zip: getVal('Postcode'), phone: getVal('Phone'), iban: getVal('IBAN') };
+        return res.name ? res : null;
+    } catch (e) { return null; }
 }
 
-// --- API ENDPOINTS ---
-
-// 1. GENERATE IDENTITY (INTEGRASI BARU)
+// API Generate Identity (Website)
 app.get('/api/generate-identity/:cc', async (req, res) => {
-    const { cc } = req.params;
-    
-    // Coba ambil dari FakeIT dulu (Data Valid)
-    const scrapedData = await scrapeFakeIT(cc);
-    
-    if (scrapedData) {
-        res.json({ success: true, source: 'real-scraper', data: scrapedData });
-    } else {
-        // Fallback: Jika web target down, frontend akan pakai randomuser.me + IBAN generator lokal
-        res.json({ success: false, message: "Scraper failed, switching to local gen" });
-    }
+    const data = await scrapeFakeIT(req.params.cc);
+    if (data) res.json({ success: true, source: 'real-scraper', data });
+    else res.json({ success: false, message: "Scraper Failed" });
 });
 
-// 2. AUTH SYSTEM
-app.post('/api/request-otp', async (req, res) => {
-    const { teleId } = req.body;
-    if (!teleId) return res.json({ success: false, message: "ID Kosong" });
-    if (teleId === ADMIN_ID) return res.json({ success: false, message: "Admin login pakai password!" });
-
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    OTP_CACHE[teleId] = otp;
-    
-    await sendTele(teleId, `🔐 *OTP NINEPACMAN*: \`${otp}\``);
-    res.json({ success: true });
-});
-
-app.post('/api/verify-otp', (req, res) => {
-    const { teleId, password, otp } = req.body;
-    if (OTP_CACHE[teleId] && OTP_CACHE[teleId] === otp) {
-        const users = readJSON(FILE_USER);
-        users[teleId] = { password, isPremium: false, expiry: 0 };
-        writeJSON(FILE_USER, users);
-        delete OTP_CACHE[teleId];
-        sendTele(ADMIN_ID, `👤 *NEW USER:* \`${teleId}\``);
-        res.json({ success: true, userId: teleId });
-    } else {
-        res.json({ success: false, message: "OTP Salah!" });
-    }
-});
-
+// API Login
 app.post('/api/login', (req, res) => {
     const { teleId, password } = req.body;
-    if (teleId === ADMIN_ID && password === ADMIN_PASS) return res.json({ success: true, userId: teleId });
-    
-    const users = readJSON(FILE_USER);
+    if (teleId == ADMIN_ID && password === ADMIN_PASS) return res.json({ success: true, userId: teleId });
+    const users = loadData(USER_DB);
     if (users[teleId] && users[teleId].password === password) return res.json({ success: true, userId: teleId });
-    
-    res.json({ success: false, message: "Login Gagal!" });
+    res.json({ success: false, message: "Login Gagal" });
 });
 
-app.get('/api/user/:id', (req, res) => {
-    if (req.params.id === ADMIN_ID) return res.json({ isPremium: true, expiry: 4102444800000, role: 'ADMIN' });
-    const u = readJSON(FILE_USER)[req.params.id];
-    res.json(u ? { isPremium: u.isPremium, expiry: u.expiry, role: 'MEMBER' } : { isPremium: false, role: 'GUEST' });
-});
-
-// 3. VOUCHER SYSTEM
-app.post('/api/claim', (req, res) => {
-    const { userId, code } = req.body;
-    const users = readJSON(FILE_USER);
-    const vouchers = readJSON(FILE_VOUCHER);
-    
-    if (vouchers[code] && vouchers[code].status === 'available') {
-        vouchers[code].status = 'used'; vouchers[code].usedBy = userId;
-        writeJSON(FILE_VOUCHER, vouchers);
-        
-        users[userId].isPremium = true;
-        const now = Date.now();
-        const base = users[userId].expiry > now ? users[userId].expiry : now;
-        users[userId].expiry = base + (vouchers[code].days * 86400000);
-        writeJSON(FILE_USER, users);
-        
-        sendTele(ADMIN_ID, `💰 *CLAIMED:* \`${code}\` by \`${userId}\``);
-        return res.json({ success: true, days: vouchers[code].days });
-    }
-    res.json({ success: false, message: "Voucher Invalid!" });
-});
-
-// 4. ADMIN TOOLS
-app.post('/api/create-voucher', (req, res) => {
-    if (req.body.userId !== ADMIN_ID) return res.status(403).json({});
-    const vouchers = readJSON(FILE_VOUCHER);
-    for(let i=0; i<req.body.qty; i++) {
-        const c = `GENPAC-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
-        vouchers[c] = { days: parseInt(req.body.days), status: 'available' };
-    }
-    writeJSON(FILE_VOUCHER, vouchers);
+// API Request OTP
+const OTP_CACHE = {};
+app.post('/api/request-otp', async (req, res) => {
+    const { teleId } = req.body;
+    if (!teleId) return res.json({ success: false });
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    OTP_CACHE[teleId] = otp;
+    bot.sendMessage(teleId, `🔐 *OTP LOGIN WEB:* \`${otp}\``, { parse_mode: 'Markdown' }).catch(() => {});
     res.json({ success: true });
 });
 
-app.get('/api/vouchers', (req, res) => res.json(readJSON(FILE_VOUCHER)));
-app.get('/api/users', (req, res) => res.json(readJSON(FILE_USER)));
-app.post('/api/reset', (req, res) => {
-    if (req.body.userId !== ADMIN_ID) return res.status(403).json({});
-    writeJSON(FILE_USER, {}); writeJSON(FILE_VOUCHER, {});
+// API Verify OTP
+app.post('/api/verify-otp', (req, res) => {
+    const { teleId, otp, password } = req.body;
+    if (OTP_CACHE[teleId] && OTP_CACHE[teleId] === otp) {
+        const users = loadData(USER_DB);
+        users[teleId] = { password, isPremium: false, expiry: 0, joined: Date.now() };
+        saveData(USER_DB, users);
+        delete OTP_CACHE[teleId];
+        
+        bot.sendMessage(ADMIN_ID, `👤 *NEW WEB USER:* \`${teleId}\``, { parse_mode: 'Markdown' });
+        res.json({ success: true, userId: teleId });
+    } else {
+        res.json({ success: false, message: "OTP Salah" });
+    }
+});
+
+// API Get User Info
+app.get('/api/user/:id', async (req, res) => {
+    const id = req.params.id;
+    const users = loadData(USER_DB);
+    let role = 'GUEST', isPremium = false, expiry = 0, username = 'User', photo = '';
+
+    if (id == ADMIN_ID) { role = 'ADMIN'; isPremium = true; expiry = 4102444800000; }
+    else if (users[id]) { role = 'MEMBER'; isPremium = users[id].isPremium; expiry = users[id].expiry; }
+
+    // Sync Foto & Username dari Telegram
+    try {
+        const chat = await bot.getChat(id);
+        username = chat.username ? `@${chat.username}` : chat.first_name;
+        const photos = await bot.getUserProfilePhotos(id, { limit: 1 });
+        if (photos.total_count > 0) {
+            // Kita kirim file_id ke frontend tidak aman, idealnya download dulu
+            // Untuk simplifikasi, kita pakai placeholder atau logic download (opsional)
+            // Di sini kita return username dulu
+        }
+    } catch (e) {}
+
+    res.json({ role, isPremium, expiry, username, photo: 'https://cdn-icons-png.flaticon.com/512/149/149071.png' });
+});
+
+// API Claim Voucher (Website)
+app.post('/api/claim', (req, res) => {
+    const { userId, code } = req.body;
+    const vocs = loadData(VOUCHER_DB);
+    const users = loadData(USER_DB);
+
+    if (vocs[code] && vocs[code].status === 'available') {
+        vocs[code].status = 'used'; vocs[code].usedBy = userId;
+        users[userId] = users[userId] || { isPremium: false, expiry: 0 };
+        users[userId].isPremium = true;
+        users[userId].expiry = Date.now() + (vocs[code].duration * 86400000);
+        
+        saveData(VOUCHER_DB, vocs);
+        saveData(USER_DB, users);
+        
+        bot.sendMessage(ADMIN_ID, `💰 *WEB CLAIM:* \`${code}\` by \`${userId}\``, { parse_mode: 'Markdown' });
+        return res.json({ success: true, days: vocs[code].duration });
+    }
+    res.json({ success: false, message: "Invalid Voucher" });
+});
+
+// API Create Voucher (Admin Web)
+app.post('/api/create-voucher', (req, res) => {
+    if (req.body.userId != ADMIN_ID) return res.status(403).json({});
+    const vocs = loadData(VOUCHER_DB);
+    for(let i=0; i<req.body.qty; i++) {
+        const c = `GENPAC-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+        vocs[c] = { duration: parseInt(req.body.days), status: 'available' };
+    }
+    saveData(VOUCHER_DB, vocs);
     res.json({ success: true });
 });
 
 // Routing Frontend
+app.get('/api/vouchers', (req, res) => res.json(loadData(VOUCHER_DB)));
+app.get('/api/users', (req, res) => res.json(loadData(USER_DB)));
+app.post('/api/reset', (req, res) => {
+    if (req.body.userId != ADMIN_ID) return res.status(403).json({});
+    saveData(USER_DB, {}); saveData(VOUCHER_DB, {});
+    res.json({ success: true });
+});
 app.get(/^(?!\/api).+/, (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
-app.listen(PORT, () => console.log(`✅ Server Ready: ${PORT}`));
+
+// ==========================================
+// 2. BAGIAN TELEGRAM BOT LOGIC
+// ==========================================
+
+const getCountryKeyboard = () => ({
+    inline_keyboard: [
+        [{ text: "🇩🇪 Germany", callback_data: 'G_DE' }, { text: "🇫🇷 Perancis", callback_data: 'G_FR' }],
+        [{ text: "🇳🇱 Belanda", callback_data: 'G_NL' }, { text: "🇬🇧 UK", callback_data: 'G_GB' }]
+    ]
+});
+
+// Bot: /start
+bot.onText(/\/start/, (msg) => {
+    const chatId = msg.chat.id;
+    const users = loadData(USER_DB);
+    
+    // Auto Register
+    if (!users[chatId]) users[chatId] = { isPremium: false, joined: Date.now(), total_generate: 0 };
+    if (chatId == ADMIN_ID) { users[chatId].isPremium = true; users[chatId].expiry = 4102444800000; }
+    saveData(USER_DB, users);
+
+    const isPrem = users[chatId].isPremium;
+    const menu = `*▌ N I N E P A C M A N . I D ▌*\n*Verified Identity Generator*\n━━━━━━━━━━━━━━━━━━━━\n` +
+                 `👤 *USER:* \`${msg.from.first_name}\`\n🆔 *ID:* \`${chatId}\`\n` +
+                 `🎖️ *STATUS:* ${isPrem ? '`PREMIUM ✅`' : '`FREE ❌`'}\n` +
+                 `━━━━━━━━━━━━━━━━━━━━\n` +
+                 (isPrem ? "Pilih wilayah database untuk generate:" : "Kirim voucher untuk akses.");
+
+    const kb = isPrem ? getCountryKeyboard() : { inline_keyboard: [[{ text: "🎫 CLAIM VOUCHER", callback_data: 'CLAIM' }]] };
+    bot.sendMessage(chatId, menu, { parse_mode: 'Markdown', reply_markup: kb });
+});
+
+// Bot: Generate Identity (Callback)
+bot.on('callback_query', async (q) => {
+    const chatId = q.message.chat.id;
+    if (q.data === 'CLAIM') return bot.sendMessage(chatId, "📩 *Kirim kode vouchernya disini:*", { parse_mode: 'Markdown' });
+
+    if (q.data.startsWith('G_')) {
+        const cc = q.data.split('_')[1];
+        bot.answerCallbackQuery(q.id, { text: "Generating..." });
+
+        // Pakai Scraper FakeIT agar data valid
+        let u = await scrapeFakeIT(cc); 
+        
+        // Fallback jika scraper gagal (pakai randomuser)
+        if (!u) {
+            const cfg = COUNTRY_CONFIG[cc];
+            const res = await axios.get(`https://randomuser.me/api/?nat=${cfg.nat}`);
+            const r = res.data.results[0];
+            u = { 
+                name: `${r.name.first} ${r.name.last}`, 
+                address: `${r.location.street.name} ${r.location.street.number}`,
+                city: r.location.city, zip: r.location.postcode, phone: r.phone,
+                iban: "GENERATED-LOCAL" // Simpel fallback
+            };
+        }
+
+        const msg = `✅ *DATA GENERATED*\n━━━━━━━━━━━━━━━━━━━━\n` +
+                    `🌍 *NEGARA:* ${COUNTRY_CONFIG[cc].name}\n` +
+                    `👤 *NAMA:* \`${u.name}\`\n` +
+                    `🏠 *ALAMAT:* \`${u.address}, ${u.city}\`\n` +
+                    `📮 *ZIP:* \`${u.zip}\`\n` +
+                    `📞 *PHONE:* \`${u.phone}\`\n` +
+                    `💳 *IBAN:* \`${u.iban}\`\n` +
+                    `━━━━━━━━━━━━━━━━━━━━`;
+        
+        bot.sendMessage(chatId, msg, { parse_mode: 'Markdown', reply_markup: getCountryKeyboard() });
+    }
+});
+
+// Bot: Voucher Claim & Create
+bot.onText(/\/addvoc (.+)/, (msg, match) => {
+    if (msg.chat.id != ADMIN_ID) return;
+    const [qty, days] = match[1].split('|');
+    const vocs = loadData(VOUCHER_DB);
+    let out = "";
+    for(let i=0; i<qty; i++) {
+        const c = `GENPAC-${Math.random().toString(36).substr(2,8).toUpperCase()}`;
+        vocs[c] = { duration: parseInt(days), status: 'available' };
+        out += `\`${c}\`\n`;
+    }
+    saveData(VOUCHER_DB, vocs);
+    bot.sendMessage(msg.chat.id, `✅ *VOUCHER DIBUAT*\n${out}`, { parse_mode: 'Markdown' });
+});
+
+bot.on('message', (msg) => {
+    if (!msg.text || msg.text.startsWith('/')) return;
+    const code = msg.text.trim().toUpperCase();
+    const vocs = loadData(VOUCHER_DB);
+    const users = loadData(USER_DB);
+
+    if (code.startsWith('GENPAC-') && vocs[code] && vocs[code].status === 'available') {
+        vocs[code].status = 'used'; vocs[code].usedBy = msg.chat.id;
+        users[msg.chat.id].isPremium = true;
+        users[msg.chat.id].expiry = Date.now() + (vocs[code].duration * 86400000);
+        
+        saveData(VOUCHER_DB, vocs);
+        saveData(USER_DB, users);
+        
+        bot.sendMessage(msg.chat.id, "⭐ *SUCCESS!* Akun Premium Aktif.");
+        bot.sendMessage(ADMIN_ID, `🔔 *BOT CLAIM:* \`${msg.from.first_name}\` (\`${msg.chat.id}\`)`, {parse_mode: 'Markdown'});
+    }
+});
+
+// ==========================================
+// START SERVER (WAJIB UNTUK RENDER)
+// ==========================================
+app.listen(PORT, () => console.log(`🚀 SYSTEM ONLINE: PORT ${PORT}`));
