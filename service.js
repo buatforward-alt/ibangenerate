@@ -1,22 +1,19 @@
-const CACHE_NAME = 'ninepacman-v-final';
+const CACHE_NAME = 'ninepacman-v4';
 const ASSETS = [
     './',
     './index.html',
-    './logo.png',
-    './bg.png'
+    './logo.jpg',       
+    './background.jpg',
+    './favicon.png'
 ];
 
-// Install
 self.addEventListener('install', (event) => {
     self.skipWaiting();
     event.waitUntil(
-        caches.open(CACHE_NAME).then(cache => {
-            return cache.addAll(ASSETS);
-        })
+        caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
     );
 });
 
-// Activate
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then(keys => Promise.all(
@@ -28,7 +25,6 @@ self.addEventListener('activate', (event) => {
     self.clients.claim();
 });
 
-// Fetch Strategy
 self.addEventListener('fetch', (event) => {
     event.respondWith(
         fetch(event.request).catch(() => caches.match(event.request))
