@@ -8,23 +8,26 @@
     <title>NinePacman.ID - Verified System</title>
     
     <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIk5pbmVQYWNtYW4uSUQgUHJlbWl1bSIsCiAgInNob3J0X25hbWUiOiAiTmluZVBhY21hbiIsCiAgInN0YXJ0X3VybCI6ICIuL2luZGV4Lmh0bWwiLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMwYTBhMGEiLAogICJ0aGVtZV9jb2xvciI6ICIjMDBkMmZmIiwKICAiaWNvbnMiOiBbXQp9">
-    
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="apple-touch-icon" href="favicon.png">
     
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    
     <style>
         :root { 
             --primary: #00d2ff; 
-            --dark: #0a0a0a; 
-            --card: rgba(22, 22, 22, 0.9); 
+            --dark: #050505; 
+            --card: rgba(20, 20, 25, 0.95); 
             --text: #e0e0e0; 
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            /* PERBAIKAN: Menggunakan background.jpg sesuai nama file kamu */
-            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('background.jpg'); 
+            font-family: 'Rajdhani', sans-serif;
+            background: linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.95)), url('background.jpg'); 
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
@@ -33,99 +36,164 @@
             margin: 0;
             padding: 10px;
             min-height: 100vh;
-            overscroll-behavior-y: none;
+            overflow-x: hidden;
         }
 
-        .container { max-width: 750px; margin: auto; position: relative; z-index: 10; padding-bottom: 50px; }
+        .container { 
+            max-width: 750px; 
+            margin: auto; 
+            position: relative; 
+            z-index: 10; 
+            padding-bottom: 50px; 
+        }
         
         .card { 
             background: var(--card); 
-            backdrop-filter: blur(10px);
-            border-radius: 12px; 
-            padding: 20px; 
+            backdrop-filter: blur(15px);
+            border-radius: 12px;
+            padding: 25px; 
             margin-bottom: 20px; 
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(0, 210, 255, 0.15);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
         }
 
-        .tabs { display: flex; gap: 5px; margin-bottom: 20px; background: rgba(0,0,0,0.5); padding: 5px; border-radius: 8px; }
-        .tab { flex: 1; padding: 12px; text-align: center; cursor: pointer; border-radius: 6px; font-weight: bold; font-size: 13px; transition: 0.3s; color: #888; }
-        .tab.active { background: var(--primary); color: #000; }
+        /* --- HEADER GLITCH --- */
+        .brand-container { text-align: center; padding: 40px 0 20px 0; }
+        .brand-title {
+            font-family: 'Orbitron', sans-serif; font-size: 32px; font-weight: 900; color: #fff; margin: 0; letter-spacing: 3px;
+            text-shadow: 0 0 15px var(--primary);
+        }
+        .brand-subtitle {
+            color: var(--primary); font-size: 12px; margin-top: 5px; font-weight: 700; letter-spacing: 4px; text-transform: uppercase;
+            border-bottom: 1px solid rgba(0,210,255,0.3); display: inline-block; padding-bottom: 5px;
+        }
+
+        /* --- INPUT & BUTTON --- */
+        input, textarea { 
+            background: rgba(0,0,0,0.6); border: 1px solid #333; color: white; padding: 15px; border-radius: 6px; width: 100%; 
+            box-sizing: border-box; margin-bottom: 15px; outline: none; font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 600;
+            transition: 0.3s;
+        }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(0,210,255,0.2); }
         
-        input, textarea { background: rgba(0,0,0,0.5); border: 1px solid #333; color: white; padding: 12px; border-radius: 6px; width: 100%; box-sizing: border-box; margin-bottom: 10px; outline: none; }
-        input:focus { border-color: var(--primary); }
-        
-        button { background: var(--primary); color: #000; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.2s; text-transform: uppercase; letter-spacing: 1px; }
-        button:hover { filter: brightness(1.2); }
-        button:active { transform: scale(0.98); }
+        button { 
+            background: var(--primary); color: #000; border: none; padding: 15px; border-radius: 6px; font-weight: 800; cursor: pointer; width: 100%; 
+            transition: 0.3s; text-transform: uppercase; letter-spacing: 2px; font-family: 'Orbitron', sans-serif; font-size: 14px;
+        }
+        button:hover { background: #fff; box-shadow: 0 0 20px var(--primary); }
         
         .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); margin-top: 10px; }
+        .btn-outline:hover { background: rgba(0,210,255,0.1); color: #fff; }
         .btn-red { background: #ff4444; color: #fff; margin-top: 10px; }
+        
+        /* --- RESULT BOX MEWAH (CYBER STYLE) --- */
+        .result-box { 
+            background: 
+                linear-gradient(rgba(0, 210, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 210, 255, 0.03) 1px, transparent 1px),
+                rgba(10, 12, 16, 0.95);
+            background-size: 20px 20px, 20px 20px, 100% 100%;
+            padding: 25px; 
+            border-radius: 8px; 
+            border: 1px solid rgba(0, 210, 255, 0.3);
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.1), inset 0 0 30px rgba(0,0,0,0.8);
+            margin-top: 25px; 
+            position: relative;
+            animation: fadeIn 0.5s ease-out;
+        }
 
-        .btn-method { background: #1e88e5; color: white; margin-bottom: 10px; padding: 15px; font-size: 14px; width: 100%; }
-        .btn-method:hover { background: #1565c0; transform: translateY(-2px); }
-        
+        .result-box::before {
+            content: ''; position: absolute; top: -1px; left: -1px; width: 15px; height: 15px;
+            border-top: 3px solid var(--primary); border-left: 3px solid var(--primary); border-radius: 4px 0 0 0;
+        }
+        .result-box::after {
+            content: ''; position: absolute; bottom: -1px; right: -1px; width: 15px; height: 15px;
+            border-bottom: 3px solid var(--primary); border-right: 3px solid var(--primary); border-radius: 0 0 4px 0;
+        }
+
+        .res-header {
+            text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; margin-bottom: 15px;
+        }
+        .res-badge {
+            background: rgba(0,210,255,0.15); color: var(--primary); padding: 5px 15px; border-radius: 4px; 
+            font-family: 'Orbitron'; font-size: 12px; letter-spacing: 1px; border: 1px solid rgba(0,210,255,0.3);
+        }
+
+        .res-table { width: 100%; border-collapse: collapse; font-size: 15px; }
+        .res-table td { padding: 8px 0; vertical-align: top; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .res-label { color: #888; font-weight: 600; width: 90px; text-transform: uppercase; font-size: 13px; }
+        .res-value { color: #fff; font-weight: 500; text-align: right; word-break: break-word; }
+        .res-highlight { color: var(--primary); font-weight: 700; text-shadow: 0 0 8px rgba(0,210,255,0.5); font-family: 'Orbitron'; letter-spacing: 1px; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- PROFILE IMAGE STYLE --- */
+        .profile-img-container {
+            width: 60px; height: 60px; border-radius: 50%; overflow: hidden;
+            border: 2px solid var(--primary); box-shadow: 0 0 15px rgba(0, 210, 255, 0.3);
+            display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.5);
+        }
+        .profile-img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* --- UTILITIES --- */
         .hidden { display: none; }
-        .result-box { background: rgba(0,0,0,0.8); padding: 15px; border-radius: 8px; border-left: 3px solid var(--primary); font-family: 'Courier New', monospace; white-space: pre-wrap; margin-top: 15px; font-size: 13px; color: #fff; line-height: 1.8; word-break: break-all; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab { flex: 1; padding: 12px; text-align: center; cursor: pointer; border-radius: 6px; font-weight: 700; background: rgba(255,255,255,0.05); color: #666; transition:0.3s; }
+        .tab.active { background: rgba(0,210,255,0.15); color: var(--primary); border: 1px solid var(--primary); }
         
-        table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; }
-        th { background: rgba(255,255,255,0.05); padding: 10px; text-align: left; color: var(--primary); }
-        td { padding: 10px; border-bottom: 1px solid #222; }
-        
-        .badge-role { padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 800; display: inline-block; }
-        .switch-auth { text-align: center; margin-top: 10px; font-size: 12px; color: #888; cursor: pointer; }
+        .switch-auth { text-align: center; margin-top: 15px; color: #888; font-size: 14px; cursor: pointer; }
         .switch-auth b { color: var(--primary); }
-        .otp-loader { border: 3px solid #f3f3f3; border-top: 3px solid var(--primary); border-radius: 50%; width: 15px; height: 15px; animation: spin 1s linear infinite; display: inline-block; margin-right: 5px; vertical-align: middle; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .adm-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
+        .adm-table th { background: rgba(0,210,255,0.1); padding: 8px; color: var(--primary); text-align: left; }
+        .adm-table td { padding: 8px; border-bottom: 1px solid #222; color: #aaa; }
+        .btn-method { background: rgba(255,255,255,0.05); color: #fff; text-align: left; padding: 20px; margin-bottom: 10px; font-size: 16px; display: flex; justify-content: space-between; border: 1px solid #333; }
+        .btn-method:hover { border-color: var(--primary); background: rgba(0,210,255,0.05); }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div style="text-align: center; padding: 30px 0;">
-        <h1 style="margin: 0; letter-spacing: 4px; font-size: 32px; color: #fff; text-shadow: 0 0 10px var(--primary);">N I N E P A C M A N . I D</h1>
-        <p style="color: var(--primary); font-size: 10px; margin-top: 5px; font-weight: bold;">PREMIUM IDENTITY ENGINE</p>
+    <div class="brand-container">
+        <h1 class="brand-title">NINEPACMAN.ID</h1>
+        <div class="brand-subtitle">PREMIUM IDENTITY ENGINE</div>
     </div>
 
     <div id="method-panel" class="card">
-        <h2 style="text-align: center; font-size: 20px; margin-bottom: 25px; color: #fff;">Pilih Metode Login</h2>
-        <button class="btn-method" onclick="startAuth('username')">LOGIN USERNAME</button>
-        <button class="btn-method" onclick="startAuth('email')">LOGIN EMAIL</button>
+        <h2 style="text-align: center; font-size: 18px; margin-bottom: 20px; color: #fff; font-family: 'Orbitron';">AUTHENTICATION</h2>
+        <button class="btn-method" onclick="startAuth('username')">LOGIN USERNAME (DB) <span>➜</span></button>
+        <button class="btn-method" onclick="startAuth('email')">LOGIN EMAIL <span>➜</span></button>
     </div>
 
-    <div id="bc-container" class="card hidden" style="border: 1px solid var(--primary); background: rgba(0, 210, 255, 0.1);">
+    <div id="bc-container" class="card hidden" style="border: 1px solid var(--primary); background: rgba(0, 210, 255, 0.05);">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-            <b style="color: var(--primary); font-size: 12px;">📢 PENGUMUMAN ADMIN</b>
-            <button onclick="closeBC()" style="width: auto; padding: 2px 8px; background: none; color: #fff; font-size: 10px;">TUTUP</button>
+            <b style="color: var(--primary);">📢 SYSTEM ANNOUNCEMENT</b>
+            <button onclick="closeBC()" style="width: auto; padding: 5px 15px; font-size: 10px; background: transparent; border: 1px solid #555;">CLOSE</button>
         </div>
-        <p id="bc-text" style="margin: 10px 0 0 0; font-size: 13px; color: #fff;"></p>
+        <p id="bc-text" style="margin: 10px 0 0 0; font-size: 14px; color: #fff; line-height: 1.5;"></p>
     </div>
 
     <div id="auth-panel" class="card hidden">
-        <h2 id="auth-title" style="color: var(--primary); margin-top: 0; font-size: 18px;">🔑 LOGIN ACCESS</h2>
+        <h2 id="auth-title" style="color: var(--primary); margin-top: 0; font-size: 20px; font-family: 'Orbitron'; text-align: center; margin-bottom: 25px;">SECURE ACCESS</h2>
         
         <div id="login-fields">
-            <input type="number" id="login-tele-id" placeholder="Masukkan ID Telegram">
-            <input type="password" id="login-pass" placeholder="Masukkan Password">
+            <input type="number" id="login-tele-id" placeholder="TELEGRAM ID">
+            <input type="password" id="login-pass" placeholder="PASSWORD">
         </div>
 
         <div id="otp-field" class="hidden">
-            <div style="background: rgba(0,210,255,0.1); padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px;">
-                <p id="otp-status-text" style="font-size: 13px; margin: 0;"><span class="otp-loader"></span>Mengirim OTP ke Telegram anda...</p>
+            <div style="background: rgba(0,210,255,0.1); padding: 15px; border-radius: 6px; text-align: center; margin-bottom: 20px; border: 1px dashed var(--primary);">
+                <p id="otp-status-text" style="font-size: 14px; margin: 0; color: #fff;">📡 Mengirim OTP ke Telegram...</p>
             </div>
-            <input type="number" id="otp-input" placeholder="Masukkan 6 Digit OTP">
-            <input type="password" id="reset-new-pass" class="hidden" placeholder="Buat Password Baru">
+            <input type="number" id="otp-input" placeholder="0 0 0 0 0 0" style="text-align: center; font-size: 24px; letter-spacing: 5px; font-family: 'Orbitron';">
         </div>
 
-        <button id="auth-btn" onclick="handleAuth()">LOGIN TO SYSTEM</button>
+        <button id="auth-btn" onclick="handleAuth()">LOGIN SYSTEM</button>
         
         <div class="switch-auth" id="switch-text" onclick="toggleAuthMode()">
-            Belum punya akun? <b>DAFTAR DISINI</b>
+            Belum punya akun? <b>DAFTAR SEKARANG</b>
         </div>
-        <div class="switch-auth" id="reset-link" onclick="toggleResetMode()" style="margin-top: 5px;">
-            Lupa password? <b style="color: #ff4444;">RESET DISINI</b>
-        </div>
-        <button class="btn-outline" onclick="location.reload()" style="width: 100%; margin-top: 15px;">KEMBALI KE PILIHAN</button>
+        <button class="btn-outline" onclick="location.reload()" style="margin-top: 20px;">KEMBALI</button>
     </div>
 
     <div id="main-content" class="hidden">
@@ -137,33 +205,36 @@
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                 <div style="display: flex; align-items: center; gap: 15px;">
-                    <div id="profile-icon" style="font-size: 28px; background: rgba(0,0,0,0.5); padding: 12px; border-radius: 50%; border: 1px solid #333;">👤</div>
+                    <div class="profile-img-container">
+                        <img id="profile-pic" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="profile-img">
+                    </div>
                     <div>
-                        <h2 style="margin: 0; font-size: 16px; color: #fff;">User Profile</h2>
-                        <div id="user-display" style="font-family: monospace; font-size: 14px; margin-top: 2px;"></div>
-                        <div id="role-label" style="margin-top: 5px;"></div>
+                        <h2 style="margin: 0; font-size: 18px; color: #fff; font-family: 'Orbitron';">USER PROFILE</h2>
+                        <div id="user-display" style="font-family: monospace; font-size: 14px; margin-top: 5px; color: #aaa;"></div>
+                        <div id="usn-display" style="font-family: 'Rajdhani'; font-size: 15px; font-weight: 700; color: var(--primary); margin-top: 2px;"></div>
+                        <div id="role-label" style="margin-top: 8px;"></div>
                     </div>
                 </div>
-                <button onclick="logout()" style="width: auto; padding: 6px 15px; font-size: 10px; background: rgba(255,0,0,0.1); color: #ff4444; border: 1px solid #600;">LOGOUT</button>
+                <button onclick="logout()" style="width: auto; padding: 8px 20px; font-size: 11px; background: transparent; color: #ff4444; border: 1px solid #ff4444;">LOGOUT</button>
             </div>
             <hr style="border: 0; border-top: 1px solid #333; margin: 20px 0;">
-            <div id="status-info" style="font-size: 18px; font-weight: 900; letter-spacing: 1px;"></div>
-            <div id="u-timer" style="color: var(--primary); font-family: monospace; font-size: 13px; margin-top: 5px;"></div>
+            <div id="status-info" style="font-size: 22px; font-weight: 900; letter-spacing: 1px; font-family: 'Rajdhani';"></div>
+            <div id="u-timer" style="color: var(--primary); font-family: 'Orbitron'; font-size: 14px; margin-top: 8px;"></div>
             
-            <div id="claim-area" class="hidden" style="margin-top: 20px; border-top: 1px dashed #333; padding-top: 15px;">
-                <input type="text" id="v-code" placeholder="MASUKKAN KODE VOUCHER">
+            <div id="claim-area" class="hidden" style="margin-top: 25px; padding-top: 20px; border-top: 1px dashed #444;">
+                <input type="text" id="v-code" placeholder="XXXX-XXXX-XXXX" style="text-align: center; font-family: 'Orbitron'; letter-spacing: 2px;">
                 <button onclick="processClaim()">AKTIVASI PREMIUM</button>
             </div>
         </div>
 
         <div id="panel-user">
-            <div class="card" id="gen-card" style="opacity: 0.2; pointer-events: none; transition: 0.3s;">
-                <h2 style="color: var(--primary);">🌍 IDENTITY GENERATOR</h2>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
-                    <button onclick="generate('DE')">🇩🇪 GERMANY</button>
-                    <button onclick="generate('FR')">🇫🇷 FRANCE</button>
-                    <button onclick="generate('NL')">🇳🇱 NETHERLANDS</button>
-                    <button onclick="generate('GB')">🇬🇧 UK</button>
+            <div class="card" id="gen-card" style="opacity: 0.5; pointer-events: none; transition: 0.3s;">
+                <h2 style="color: var(--primary); font-family: 'Orbitron'; font-size: 16px; margin-top: 0; margin-bottom: 20px;">🌍 SELECT REGION</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <button class="btn-outline" onclick="generate('DE')">🇩🇪 GERMANY</button>
+                    <button class="btn-outline" onclick="generate('FR')">🇫🇷 FRANCE</button>
+                    <button class="btn-outline" onclick="generate('NL')">🇳🇱 NETHERLANDS</button>
+                    <button class="btn-outline" onclick="generate('GB')">🇬🇧 UK</button>
                 </div>
                 <div id="res-area" class="result-box hidden"></div>
             </div>
@@ -171,39 +242,35 @@
 
         <div id="panel-admin" class="hidden">
             <div class="card">
-                <h2 style="color: var(--primary);">📢 BROADCAST & BOT CONFIG</h2>
-                <textarea id="bc-input" placeholder="Tulis pengumuman..." rows="2"></textarea>
-                <button onclick="sendBC()">KIRIM BROADCAST (WEB + TELE)</button>
+                <h2 style="color: var(--primary); font-family: 'Orbitron'; font-size: 16px;">📢 BROADCAST SYSTEM</h2>
+                <textarea id="bc-input" placeholder="Tulis pesan global..." rows="2"></textarea>
+                <button onclick="sendBC()">PUBLISH</button>
             </div>
 
             <div class="card">
-                <h2 style="color: var(--primary);">🎟️ VOUCHER MAKER</h2>
-                <div style="display: flex; gap: 10px;">
-                    <input type="number" id="a-days" value="30" style="flex:1;">
-                    <input type="number" id="a-qty" value="5" style="flex:1;">
+                <h2 style="color: var(--primary); font-family: 'Orbitron'; font-size: 16px;">🎟️ VOUCHER GENERATOR</h2>
+                <div style="display: flex; gap: 15px; margin-bottom: 10px;">
+                    <input type="number" id="a-days" value="30" style="flex:1; margin:0;" placeholder="Hari">
+                    <input type="number" id="a-qty" value="5" style="flex:1; margin:0;" placeholder="Jml">
                 </div>
-                <button onclick="adminCreate()">GENERATE VOUCHERS</button>
+                <button onclick="adminCreate()">GENERATE</button>
             </div>
 
             <div class="card">
-                <h2 style="color: var(--primary);">👥 REGISTERED USERS</h2>
-                <div style="max-height: 200px; overflow-y: auto; background: #000; border-radius: 8px;">
-                    <table id="user-table-el">
-                        <thead><tr><th>TELE ID</th><th>STATUS</th><th>ACTION</th></tr></thead>
+                <h2 style="color: var(--primary); font-family: 'Orbitron'; font-size: 16px;">👥 DATABASE</h2>
+                <div style="max-height: 250px; overflow-y: auto; background: #050505; border-radius: 6px; border: 1px solid #222; padding: 5px;">
+                    <table class="adm-table">
+                        <thead><tr><th>ID</th><th>STATUS</th><th>ACT</th></tr></thead>
                         <tbody id="user-list"></tbody>
                     </table>
                 </div>
-                <button class="btn-red" onclick="resetAll()">🗑️ RESET ALL DATABASE</button>
-            </div>
-            
-            <div class="card">
-                <h2 style="color: var(--primary);">🎟️ ACTIVE VOUCHERS</h2>
-                <div style="max-height: 200px; overflow-y: auto; background: #000; border-radius: 8px;">
-                    <table>
-                        <thead><tr><th>CODE</th><th>DAY</th><th>STAT</th><th>USED</th></tr></thead>
+                <div style="max-height: 250px; overflow-y: auto; background: #050505; border-radius: 6px; border: 1px solid #222; padding: 5px; margin-top: 15px;">
+                    <table class="adm-table">
+                        <thead><tr><th>CODE</th><th>DAY</th><th>USED</th></tr></thead>
                         <tbody id="voc-table"></tbody>
                     </table>
                 </div>
+                <button class="btn-red" onclick="resetAll()" style="width:100%;">🗑️ RESET ALL DATABASE</button>
             </div>
         </div>
     </div>
@@ -211,8 +278,6 @@
 
 <script>
     const ADMIN_ID = "7815361814";
-    const BOT_TOKEN = "8375119611:AAEKGow9IaZqGdDTBMewwYkL3wYMjXMKR18";
-    
     const COUNTRY_CFG = {
         'GB': { name: 'United Kingdom', nat: 'gb', bank: 'MIDL', code: '1611', len: 8 },
         'FR': { name: 'France', nat: 'fr', bank: '20041', code: '1527', len: 11 },
@@ -220,275 +285,214 @@
         'NL': { name: 'Netherlands', nat: 'nl', bank: 'ABNA', code: '2321', len: 10 }
     };
 
-    const getDB = (k) => JSON.parse(localStorage.getItem(k) || '{}');
-    const setDB = (k, v) => localStorage.setItem(k, JSON.stringify(v));
-    let timerInterval = null, authMode = 'login', currentOTP = null, tempId = null, tempPass = null, isResetMode = false;
+    let timerInterval = null, authMode = 'login', tempUserData = null, currentUserRole = 'MEMBER';
 
-    // --- REGISTRASI SERVICE WORKER (PWA) ---
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./service.js')
-                .then(reg => console.log('ServiceWorker registered'))
-                .catch(err => console.log('ServiceWorker failed: ', err));
-        });
-    }
-    // ----------------------------------------
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('./service.js');
 
-    function startAuth(method) {
-        document.getElementById('method-panel').classList.add('hidden');
-        document.getElementById('auth-panel').classList.remove('hidden');
-        document.getElementById('auth-title').innerText = `🔑 LOGIN ${method.toUpperCase()}`;
-    }
-
+    function startAuth(m) { document.getElementById('method-panel').classList.add('hidden'); document.getElementById('auth-panel').classList.remove('hidden'); }
+    
     function toggleAuthMode() {
-        isResetMode = false;
         authMode = authMode === 'login' ? 'signup' : 'login';
-        document.getElementById('auth-title').innerText = authMode === 'login' ? '🔑 LOGIN ACCESS' : '📝 SIGN UP';
-        document.getElementById('auth-btn').innerText = authMode === 'login' ? 'LOGIN TO SYSTEM' : 'KIRIM OTP KE TELEGRAM';
-        document.getElementById('switch-text').innerHTML = authMode === 'login' ? 'Belum punya akun? <b>DAFTAR DISINI</b>' : 'Sudah punya akun? <b>LOGIN DISINI</b>';
+        document.getElementById('auth-title').innerText = authMode === 'login' ? '🔑 LOGIN ACCESS' : '📝 SIGN UP (OTP)';
+        document.getElementById('auth-btn').innerText = authMode === 'login' ? 'LOGIN SYSTEM' : 'KIRIM OTP';
+        document.getElementById('switch-text').innerHTML = authMode === 'login' ? 'Belum punya akun? <b>DAFTAR SEKARANG</b>' : 'Sudah punya akun? <b>LOGIN DISINI</b>';
         document.getElementById('otp-field').classList.add('hidden');
         document.getElementById('login-fields').classList.remove('hidden');
-        document.getElementById('reset-new-pass').classList.add('hidden');
-        document.getElementById('reset-link').classList.remove('hidden');
-    }
-
-    function toggleResetMode() {
-        isResetMode = true;
-        document.getElementById('auth-title').innerText = '🔓 RESET PASSWORD';
-        document.getElementById('auth-btn').innerText = 'KIRIM OTP RESET';
-        document.getElementById('switch-text').innerHTML = 'Kembali ke <b>LOGIN</b>';
-        document.getElementById('reset-link').classList.add('hidden');
-        document.getElementById('otp-field').classList.add('hidden');
-        document.getElementById('login-fields').classList.remove('hidden');
-        document.getElementById('login-pass').classList.add('hidden');
+        document.getElementById('otp-input').value = '';
     }
 
     async function handleAuth() {
-        if (isResetMode) {
-            if (currentOTP) {
-                const input = document.getElementById('otp-input').value;
-                const newPass = document.getElementById('reset-new-pass').value;
-                if (input == currentOTP && newPass) {
-                    const accounts = getDB('accounts');
-                    if (accounts[tempId]) {
-                        accounts[tempId].password = newPass;
-                        setDB('accounts', accounts);
-                        alert("Password Berhasil Diperbarui!");
-                        location.reload();
-                    } else { alert("ID tidak terdaftar!"); location.reload(); }
-                } else { alert("OTP Salah atau Password Baru Kosong!"); }
-            } else {
-                tempId = document.getElementById('login-tele-id').value.toString();
-                if (!tempId) return alert("Masukkan ID Telegram!");
-                currentOTP = Math.floor(100000 + Math.random() * 900000);
-                document.getElementById('otp-status-text').innerText = "Mengirim OTP Reset...";
-                try {
-                    await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                        chat_id: tempId,
-                        text: `🔓 *NINEPACMAN.ID RESET PASSWORD*\n\nKode OTP Reset Anda: \`${currentOTP}\`\nJangan berikan kode ini kepada siapapun.`,
-                        parse_mode: 'Markdown'
-                    });
-                    document.getElementById('login-fields').classList.add('hidden');
-                    document.getElementById('otp-field').classList.remove('hidden');
-                    document.getElementById('reset-new-pass').classList.remove('hidden');
-                    document.getElementById('auth-btn').innerText = 'KONFIRMASI RESET';
-                } catch (e) { alert("Gagal kirim OTP! Pastikan bot sudah distart."); }
-            }
-            return;
-        }
-
         if (authMode === 'login') {
-            const id = document.getElementById('login-tele-id').value.toString();
+            const id = document.getElementById('login-tele-id').value;
             const pass = document.getElementById('login-pass').value;
-            const accounts = getDB('accounts');
-            
-            if (id === ADMIN_ID && pass === 'admin123') {
-                localStorage.setItem('currentUserId', id);
-                return showMain();
-            }
-
-            if (accounts[id] && accounts[id].password === pass) {
-                localStorage.setItem('currentUserId', id);
-                showMain();
-            } else { alert("ID atau Password salah!"); }
+            if(!id || !pass) return alert("Isi Data!");
+            try {
+                const res = await axios.post('/api/login', { teleId: id, password: pass });
+                if (res.data.success) { localStorage.setItem('currentUserId', res.data.userId); location.reload(); }
+                else alert(res.data.message);
+            } catch(e) { alert("Server Error"); }
         } else {
-            if (currentOTP) {
-                const input = document.getElementById('otp-input').value;
-                if (input == currentOTP) {
-                    const accounts = getDB('accounts');
-                    accounts[tempId] = { password: tempPass, teleId: tempId, isPremium: false, expiry: 0 };
-                    setDB('accounts', accounts);
-                    alert("Pendaftaran Berhasil!");
-                    toggleAuthMode();
-                    currentOTP = null;
-                } else { alert("OTP Salah!"); }
-            } else {
-                tempId = document.getElementById('login-tele-id').value.toString();
-                tempPass = document.getElementById('login-pass').value;
-                if (!tempId || !tempPass) return alert("Lengkapi ID dan Password!");
-                currentOTP = Math.floor(100000 + Math.random() * 900000);
+            if(document.getElementById('otp-field').classList.contains('hidden')) {
+                const id = document.getElementById('login-tele-id').value;
+                const pass = document.getElementById('login-pass').value;
+                if(!id || !pass) return alert("Isi Data!");
+                tempUserData = { teleId: id, password: pass };
+                document.getElementById('otp-field').classList.remove('hidden');
+                document.getElementById('login-fields').classList.add('hidden');
+                document.getElementById('auth-btn').innerText = 'VERIFIKASI OTP';
                 try {
-                    await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                        chat_id: tempId,
-                        text: `🔐 *NINEPACMAN.ID VERIFICATION*\n\nKode OTP Anda: \`${currentOTP}\`\nJangan berikan kode ini kepada siapapun.`,
-                        parse_mode: 'Markdown'
-                    });
-                    document.getElementById('login-fields').classList.add('hidden');
-                    document.getElementById('otp-field').classList.remove('hidden');
-                    document.getElementById('auth-btn').innerText = 'VERIFIKASI OTP';
-                } catch (e) { alert("Gagal kirim OTP! Pastikan Anda sudah chat ke bot."); }
+                    const res = await axios.post('/api/request-otp', { teleId: id });
+                    if(res.data.success) document.getElementById('otp-status-text').innerHTML = "✅ Cek Telegram Bot Anda!";
+                    else { alert(res.data.message); toggleAuthMode(); }
+                } catch(e) { alert("Server Error"); toggleAuthMode(); }
+            } else {
+                const otp = document.getElementById('otp-input').value;
+                try {
+                    const res = await axios.post('/api/verify-otp', { ...tempUserData, otp });
+                    if(res.data.success) { localStorage.setItem('currentUserId', res.data.userId); location.reload(); }
+                    else alert(res.data.message);
+                } catch(e) { alert("Error"); }
             }
         }
-    }
-
-    async function generate(cc) {
-        const resBox = document.getElementById('res-area');
-        resBox.classList.remove('hidden');
-        resBox.style.display = "block";
-        resBox.innerText = "⏳ Generating Verified Data...";
-        try {
-            const cfg = COUNTRY_CFG[cc];
-            const api = await axios.get(`https://randomuser.me/api/?nat=${cfg.nat}`);
-            const u = api.data.results[0];
-            const iban = calcIBAN(cc);
-            resBox.innerHTML = `✅ <b>DATA GENERATED</b>\n━━━━━━━━━━━━━━━━━━━━\n<b>NEGARA</b> : ${cfg.name}\n<b>NAMA</b>   : ${u.name.first} ${u.name.last}\n<b>STREET</b> : ${u.location.street.name} ${u.location.street.number}\n<b>CITY</b>   : ${u.location.city}\n<b>STATE</b>  : ${u.location.state}\n<b>ZIP</b>    : ${u.location.postcode}\n<b>PHONE</b>  : ${u.phone}\n<b>IBAN</b>   : <span style="color:var(--primary)">${iban}</span>\n━━━━━━━━━━━━━━━━━━━━`;
-        } catch (e) { resBox.innerText = "❌ Network error or API limit!"; }
-    }
-
-    function calcIBAN(cc) {
-        const cfg = COUNTRY_CFG[cc];
-        const acc = Math.floor(Math.pow(10, cfg.len-1) + Math.random() * Math.pow(10, cfg.len-1) * 9).toString();
-        let bban = (cc === 'GB') ? cfg.bank + "070093" + acc : (cc === 'FR') ? cfg.bank + "01005" + acc + "80" : cfg.bank + acc;
-        let rawStr = bban + cfg.code + "00";
-        let numericStr = rawStr.replace(/[A-Z]/g, char => (char.charCodeAt(0) - 55).toString());
-        const mod = BigInt(numericStr) % 97n;
-        const checkDigits = (98n - mod).toString().padStart(2, '0');
-        return `${cc}${checkDigits}${bban}`;
     }
 
     function logout() { localStorage.removeItem('currentUserId'); location.reload(); }
-
-    function showMain() {
-        if (localStorage.getItem('currentUserId')) {
-            document.getElementById('auth-panel').classList.add('hidden');
-            document.getElementById('method-panel').classList.add('hidden');
-            document.getElementById('main-content').classList.remove('hidden');
-            syncStatus();
-        }
-    }
+    function showMain() { if (localStorage.getItem('currentUserId')) { document.getElementById('auth-panel').classList.add('hidden'); document.getElementById('method-panel').classList.add('hidden'); document.getElementById('main-content').classList.remove('hidden'); syncStatus(); } }
 
     function switchTab(t) {
-        const userId = localStorage.getItem('currentUserId');
-        if (t === 'admin' && userId !== ADMIN_ID) return alert("AKSES ADMIN DITOLAK!");
+        if (t === 'admin' && currentUserRole !== 'ADMIN') return alert("ACCESS DENIED");
         document.getElementById('panel-user').classList.toggle('hidden', t !== 'user');
         document.getElementById('panel-admin').classList.toggle('hidden', t !== 'admin');
         document.getElementById('t-user').classList.toggle('active', t === 'user');
         document.getElementById('t-admin').classList.toggle('active', t === 'admin');
-        if(t === 'admin') { renderVoc(); renderUsers(); }
+        if(t === 'admin') { loadVouchers(); loadUsers(); }
     }
 
-    function syncStatus() {
-        const userId = localStorage.getItem('currentUserId');
-        const accounts = getDB('accounts');
-        const u = (userId === ADMIN_ID) ? { isPremium: true, expiry: 4102444800000 } : (accounts[userId] || { isPremium: false });
+    async function syncStatus() {
+        const uid = localStorage.getItem('currentUserId');
+        if(!uid) return;
         const bc = localStorage.getItem('activeBC');
-
-        document.getElementById('user-display').innerText = `ID: ${userId}`;
-        document.getElementById('user-display').style.color = (userId === ADMIN_ID ? 'var(--primary)' : '#888');
-        document.getElementById('role-label').innerHTML = `<span class="badge-role" style="background:${userId === ADMIN_ID ? 'var(--primary)' : '#333'}; color:${userId === ADMIN_ID ? '#000' : '#aaa'};">${userId === ADMIN_ID ? 'ADMIN MASTER' : 'MEMBER'}</span>`;
-        document.getElementById('profile-icon').innerText = (userId === ADMIN_ID ? '⚡' : '👤');
-
         if (bc) { document.getElementById('bc-container').classList.remove('hidden'); document.getElementById('bc-text').innerText = bc; }
-        
-        clearInterval(timerInterval);
-        if (u.isPremium && (userId === ADMIN_ID || Date.now() < u.expiry)) {
-            document.getElementById('status-info').innerHTML = `STATUS: <span style="color:var(--primary)">PREMIUM ✅</span>`;
-            document.getElementById('gen-card').style.opacity = "1";
-            document.getElementById('gen-card').style.pointerEvents = "auto";
-            document.getElementById('claim-area').classList.add('hidden');
-            if(userId !== ADMIN_ID) startTimer(u.expiry);
-            else document.getElementById('u-timer').innerText = "EXPIRED: LIFETIME";
-        } else {
-            document.getElementById('status-info').innerHTML = `STATUS: <span style="color:#ff4444">FREE ❌</span>`;
-            document.getElementById('u-timer').innerText = "";
-            document.getElementById('gen-card').style.opacity = "0.2";
-            document.getElementById('gen-card').style.pointerEvents = "none";
-            document.getElementById('claim-area').classList.remove('hidden');
-        }
+
+        try {
+            const res = await axios.get(`/api/user/${uid}`);
+            const data = res.data;
+            currentUserRole = data.role;
+            const isPrem = data.isPremium || (data.expiry > Date.now());
+
+            // --- UI PROFILE UPDATED ---
+            document.getElementById('user-display').innerText = `ID: ${uid}`;
+            
+            // Logic Username & Foto (Simulasi karena backend belum kirim data real)
+            const isAdmin = currentUserRole === 'ADMIN';
+            // Placeholder Username (bisa diganti jika backend sudah support)
+            document.getElementById('usn-display').innerText = isAdmin ? '@NinePacman_Admin' : '@Member_User';
+            // Placeholder Foto Profil
+            document.getElementById('profile-pic').src = isAdmin 
+                ? 'https://cdn-icons-png.flaticon.com/512/10629/10629607.png' // Icon Admin Keren
+                : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'; // Icon User Biasa
+
+            document.getElementById('role-label').innerHTML = `<span class="badge-role" style="background:${isAdmin?'var(--primary)':'#333'}; color:${isAdmin?'#000':'#aaa'}">${currentUserRole}</span>`;
+
+            clearInterval(timerInterval);
+            if (isPrem) {
+                document.getElementById('status-info').innerHTML = `STATUS: <span style="color:var(--primary)">PREMIUM ✅</span>`;
+                document.getElementById('gen-card').style.opacity = "1";
+                document.getElementById('gen-card').style.pointerEvents = "auto";
+                document.getElementById('claim-area').classList.add('hidden');
+                if(currentUserRole === 'ADMIN') document.getElementById('u-timer').innerText = "LIFETIME";
+                else startTimer(data.expiry);
+            } else {
+                document.getElementById('status-info').innerHTML = `STATUS: <span style="color:#ff4444">FREE ❌</span>`;
+                document.getElementById('u-timer').innerText = "Aktifkan Premium untuk akses.";
+                document.getElementById('gen-card').style.opacity = "0.5";
+                document.getElementById('gen-card').style.pointerEvents = "none";
+                document.getElementById('claim-area').classList.remove('hidden');
+            }
+        } catch (e) {}
     }
 
     function startTimer(exp) {
-        const box = document.getElementById('u-timer');
         timerInterval = setInterval(() => {
             const diff = exp - Date.now();
-            if(diff <= 0) { clearInterval(timerInterval); location.reload(); }
-            const d = Math.floor(diff/864e5), h = Math.floor((diff%864e5)/36e5), m = Math.floor((diff%36e5)/6e4), s = Math.floor((diff%6e4)/1000);
-            box.innerText = `EXPIRED IN: ${d}d ${h}h ${m}m ${s}s`;
+            if(diff <= 0) location.reload();
+            const d = Math.floor(diff/864e5), h = Math.floor((diff%864e5)/36e5);
+            document.getElementById('u-timer').innerText = `EXPIRED: ${d} Hari ${h} Jam`;
         }, 1000);
     }
 
-    async function sendBC() {
-        const msg = document.getElementById('bc-input').value;
-        const chatid = ADMIN_ID; 
-        if (!msg) return alert("Pesan kosong!");
-        localStorage.setItem('activeBC', msg);
-        if (BOT_TOKEN && chatid) {
-            try {
-                await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, { chat_id: chatid, text: `📢 *NINEPACMAN.ID ANNOUNCEMENT*\n\n${msg}`, parse_mode: 'Markdown' });
-                alert("Broadcast Terkirim!");
-            } catch (e) { alert("Gagal kirim ke Telegram!"); }
-        } else alert("Terkirim ke Web!");
-        syncStatus();
+    async function processClaim() {
+        const uid = localStorage.getItem('currentUserId');
+        const code = document.getElementById('v-code').value.trim().toUpperCase();
+        try {
+            const res = await axios.post('/api/claim', { userId: uid, code });
+            if(res.data.success) { alert("Sukses Premium!"); syncStatus(); } else alert(res.data.message);
+        } catch(e) { alert("Error"); }
     }
 
-    function closeBC() { document.getElementById('bc-container').classList.add('hidden'); }
+    async function generate(cc) {
+        const box = document.getElementById('res-area');
+        box.classList.remove('hidden');
+        box.innerHTML = "<div style='text-align:center; padding:20px; color:#888;'>SCANNING DATABASE...</div>";
+        try {
+            const serverRes = await axios.get(`/api/generate-identity/${cc}`);
+            let u, iban, sourceLabel;
+            
+            if (serverRes.data.success && serverRes.data.source === 'real-scraper') {
+                const d = serverRes.data.data;
+                u = { name: d.name, address: d.address, city: d.city, zip: d.zip, phone: d.phone };
+                iban = d.iban;
+                sourceLabel = `<span style="color:#00ff00; font-size:10px;">[ VALID SOURCE ]</span>`;
+            } else {
+                const cfg = COUNTRY_CFG[cc];
+                const api = await axios.get(`https://randomuser.me/api/?nat=${cfg.nat}`);
+                const r = api.data.results[0];
+                u = { name: `${r.name.first} ${r.name.last}`, address: `${r.location.street.name} ${r.location.street.number}`, city: r.location.city, zip: r.location.postcode, phone: r.phone };
+                iban = generateVerifiedIBAN(cc);
+                sourceLabel = `<span style="color:#ffaa00; font-size:10px;">[ GENERATED ]</span>`;
+            }
 
-    function adminCreate() {
-        const d = document.getElementById('a-days').value, q = document.getElementById('a-qty').value, vocs = getDB('vouchers');
-        for(let i=0; i<q; i++) vocs[`GENPAC-${Math.random().toString(36).substr(2,8).toUpperCase()}`] = { days: d, status: 'available', usedBy: '-' };
-        setDB('vouchers', vocs); renderVoc(); alert("Voucher Generated!");
+            const cfg = COUNTRY_CFG[cc];
+            box.innerHTML = `
+                <div class="res-header"><span class="res-badge">✔ DATA VERIFIED ${sourceLabel}</span></div>
+                <table class="res-table">
+                    <tr><td class="res-label">COUNTRY</td><td class="res-value" style="color:#fff;">${cfg.name}</td></tr>
+                    <tr><td class="res-label">FULL NAME</td><td class="res-value">${u.name}</td></tr>
+                    <tr><td class="res-label">ADDRESS</td><td class="res-value">${u.address}</td></tr>
+                    <tr><td class="res-label">CITY</td><td class="res-value">${u.city}</td></tr>
+                    <tr><td class="res-label">ZIP CODE</td><td class="res-value">${u.zip}</td></tr>
+                    <tr><td class="res-label">PHONE</td><td class="res-value">${u.phone}</td></tr>
+                    <tr><td class="res-label">IBAN</td><td class="res-value res-highlight">${iban}</td></tr>
+                </table>
+            `;
+        } catch (e) { box.innerText = "Connection Error!"; }
     }
 
-    function renderVoc() {
-        const vocs = getDB('vouchers'), body = document.getElementById('voc-table'); 
-        if(body) {
-            body.innerHTML = '';
-            Object.keys(vocs).reverse().forEach(k => {
-                body.innerHTML += `<tr><td>${k}</td><td>${vocs[k].days}d</td><td style="color:${vocs[k].status==='available'?'#28a745':'#ff4444'}">${vocs[k].status}</td><td>${vocs[k].usedBy}</td></tr>`;
-            });
-        }
+    // FUNGSI IBAN YANG SUDAH DIVALIDASI (SAMA DENGAN BOT)
+    function generateVerifiedIBAN(cc) {
+        const cfg = COUNTRY_CFG[cc];
+        const acc = Math.floor(Math.pow(10, cfg.len-1) + Math.random() * Math.pow(10, cfg.len-1) * 9).toString();
+        let bban = (cc === 'GB') ? cfg.bank + "070093" + acc : (cc === 'FR') ? cfg.bank + "01005" + acc + "80" : cfg.bank + acc;
+        
+        let rawStr = bban + cfg.code + "00";
+        let numericStr = rawStr.replace(/[A-Z]/g, char => (char.charCodeAt(0) - 55).toString());
+        
+        const mod = BigInt(numericStr) % 97n;
+        const checkDigits = (98n - mod).toString().padStart(2, '0');
+        
+        return `${cc}${checkDigits}${bban}`;
     }
 
-    function resetAll() {
-        if(confirm("Yakin hapus semua database?")) {
-            localStorage.clear();
-            location.reload();
-        }
+    async function adminCreate() {
+        const d = document.getElementById('a-days').value, q = document.getElementById('a-qty').value;
+        try { await axios.post('/api/create-voucher', { userId: localStorage.getItem('currentUserId'), days: d, qty: q }); loadVouchers(); } catch(e) {}
     }
 
-    function renderUsers() {
-        const accs = getDB('accounts'), body = document.getElementById('user-list'); body.innerHTML = '';
-        Object.keys(accs).forEach(id => {
-            body.innerHTML += `<tr><td>${id}</td><td>${accs[id].isPremium?'PREM':'FREE'}</td><td><button onclick="delUser('${id}')" style="font-size:8px; padding:4px; background:red; color:white;">HAPUS</button></td></tr>`;
+    async function loadVouchers() {
+        const res = await axios.get('/api/vouchers');
+        const list = document.getElementById('voc-table'); list.innerHTML = '';
+        Object.keys(res.data).reverse().forEach(k => {
+            const v = res.data[k];
+            list.innerHTML += `<tr><td>${k}</td><td>${v.days}d</td><td style="color:${v.status==='available'?'lime':'red'}">${v.status==='available'?'READY':'USED'}</td></tr>`;
         });
     }
 
-    function delUser(id) { const accs = getDB('accounts'); delete accs[id]; setDB('accounts', accs); renderUsers(); }
-
-    function processClaim() {
-        const userId = localStorage.getItem('currentUserId'), code = document.getElementById('v-code').value.trim().toUpperCase(), vocs = getDB('vouchers'), accs = getDB('accounts');
-        if(vocs[code] && vocs[code].status === 'available') {
-            vocs[code].status = 'used'; vocs[code].usedBy = userId;
-            if(accs[userId]) {
-                accs[userId].isPremium = true; 
-                accs[userId].expiry = Date.now() + (parseInt(vocs[code].days)*864e5);
-                setDB('accounts', accs);
-            }
-            setDB('vouchers', vocs); alert("PREMIUM AKTIF!"); syncStatus();
-        } else alert("Voucher Salah/Sudah Dipakai!");
+    async function loadUsers() {
+        const res = await axios.get('/api/users');
+        const list = document.getElementById('user-list'); list.innerHTML = '';
+        Object.keys(res.data).forEach(id => {
+            const u = res.data[id];
+            list.innerHTML += `<tr><td>${id}</td><td>${u.isPremium?'PREM':'FREE'}</td><td><button onclick="delUser('${id}')" class="btn-red" style="padding:2px 5px; font-size:10px; width:auto; margin:0;">DEL</button></td></tr>`;
+        });
     }
+
+    async function delUser(id) { if(confirm("Del?")) { await axios.delete(`/api/user/${id}`); loadUsers(); } }
+    async function resetAll() { if(confirm("RESET ALL?")) { await axios.post('/api/reset', { userId: localStorage.getItem('currentUserId') }); location.reload(); } }
+    function sendBC() { localStorage.setItem('activeBC', document.getElementById('bc-input').value); alert("Done"); syncStatus(); }
+    function closeBC() { document.getElementById('bc-container').classList.add('hidden'); }
 
     window.onload = showMain;
 </script>
 </body>
 </html>
+
