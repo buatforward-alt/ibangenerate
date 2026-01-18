@@ -7,10 +7,10 @@
     <meta name="description" content="NinePacman.ID - Verified Identity Generator System">
     <title>NinePacman.ID - Verified System</title>
     
-    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIk5pbmVQYWNtYW4uSUQgUHJlbWl1bSIsCiAgInNob3J0X25hbWUiOiAiTmluZVBhY21hbiIsCiAgInN0YXJ0X3VybCI6ICIuL2luZGV4Lmh0bWwiLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMwYTBhMGEiLAogICJ0aGVtZV9jb2xvciI6ICIjMDBkMmZmIiwKICAiaWNvbnMiOiBbCiAgICB7CiAgICAgICJzcmMiOiAibG9nby5wbmciLAogICAgICAic2l6ZXMiOiAiMTkyeDE5MiIsCiAgICAgICJ0eXBlIjogImltYWdlL3BuZyIKICAgIH0KICBdCn0=">
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIk5pbmVQYWNtYW4uSUQgUHJlbWl1bSIsCiAgInNob3J0X25hbWUiOiAiTmluZVBhY21hbiIsCiAgInN0YXJ0X3VybCI6ICIuL2luZGV4Lmh0bWwiLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMwYTBhMGEiLAogICJ0aGVtZV9jb2xvciI6ICIjMDBkMmZmIiwKICAiaWNvbnMiOiBbXQp9">
     
-    <link rel="icon" type="image/png" href="logo.png">
-    <link rel="apple-touch-icon" href="logo.png">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="favicon.png">
     
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
@@ -23,7 +23,8 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.85)), url('bg.png'); 
+            /* PERBAIKAN: Menggunakan background.jpg sesuai nama file kamu */
+            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('background.jpg'); 
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
@@ -223,7 +224,7 @@
     const setDB = (k, v) => localStorage.setItem(k, JSON.stringify(v));
     let timerInterval = null, authMode = 'login', currentOTP = null, tempId = null, tempPass = null, isResetMode = false;
 
-    // Service Worker Registration for PWA
+    // --- REGISTRASI SERVICE WORKER (PWA) ---
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./service.js')
@@ -231,6 +232,7 @@
                 .catch(err => console.log('ServiceWorker failed: ', err));
         });
     }
+    // ----------------------------------------
 
     function startAuth(method) {
         document.getElementById('method-panel').classList.add('hidden');
