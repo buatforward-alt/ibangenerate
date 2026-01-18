@@ -2,8 +2,9 @@ const CACHE_NAME = 'ninepacman-v-final';
 const ASSETS = [
     './',
     './index.html',
-    './logo.png',
-    './bg.png'
+    './logo.jpg',       
+    './background.jpg',
+    './favicon.png'
 ];
 
 // Install
@@ -33,4 +34,5 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
         fetch(event.request).catch(() => caches.match(event.request))
     );
+
 });
